@@ -1,6 +1,16 @@
+const FACESET = "peekshield_estudiantes";
 let cameraStream = null;
 let asistenciaBlockeada = false;
 let detectandoInterval = null;
+
+async function callFacepp(endpoint, params) {
+  const res = await fetch('/api/facepp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ endpoint, params })
+  });
+  return res.json();
+}
 
 async function iniciarCamara() {
   try {
@@ -28,7 +38,6 @@ function iniciarDeteccion() {
     const video = document.getElementById('video');
     if (!video || video.readyState < 2) return;
 
-    // Capturar frame
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -36,53 +45,36 @@ function iniciarDeteccion() {
     const base64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
     try {
-      // Buscar en Face++
-      const form = new FormData();
-      form.append('api_key', FACEPP_KEY);
-      form.append('api_secret', FACEPP_SECRET);
-      form.append('outer_id', FACEPP_FACESET);
-      form.append('image_base64', base64);
-      form.append('return_result_count', '1');
-
-      const res = await fetch('https://api-us.faceplusplus.com/facepp/v3/search', {
-        method: 'POST', body: form
+      const data = await callFacepp('search', {
+        outer_id: FACESET,
+        image_base64: base64,
+        return_result_count: '1'
       });
-      const data = await res.json();
 
-      if (data.results && data.results.length > 0) {
-        const confidence = data.results[0].confidence;
+      if (data.results && data.results.length > 0 && data.results[0].confidence >= 75) {
+        asistenciaBlockeada = true;
+        clearInterval(detectandoInterval);
+
         const faceToken = data.results[0].face_token;
+        const snap = await db.collection('estudiantes')
+          .where('faceToken', '==', faceToken)
+          .limit(1)
+          .get();
 
-        // Umbral de confianza: 75% o más
-        if (confidence >= 75) {
-          asistenciaBlockeada = true;
-          clearInterval(detectandoInterval);
-
-          // Buscar nombre en Firestore por faceToken
-          const snap = await db.collection('estudiantes')
-            .where('faceToken', '==', faceToken)
-            .limit(1)
-            .get();
-
-          if (!snap.empty) {
-            const nombre = snap.docs[0].data().nombre;
-            await registrarAsistencia(nombre, base64);
-          } else {
-            document.getElementById('statusAsistencia').textContent = '❓ Cara no registrada';
-            asistenciaBlockeada = false;
-            iniciarDeteccion();
-          }
+        if (!snap.empty) {
+          await registrarAsistencia(snap.docs[0].data().nombre, base64);
         } else {
-          document.getElementById('statusAsistencia').textContent = '👤 Acércate a la cámara...';
+          document.getElementById('statusAsistencia').textContent = '❓ Cara no registrada';
+          asistenciaBlockeada = false;
+          iniciarDeteccion();
         }
       } else {
         document.getElementById('statusAsistencia').textContent = '👤 Acércate a la cámara...';
       }
     } catch(e) {
-      console.error('Error Face++:', e);
+      console.error('Error:', e);
     }
-
-  }, 3000); // Cada 3 segundos para no agotar llamadas
+  }, 3000);
 }
 
 async function registrarAsistencia(nombre, base64) {

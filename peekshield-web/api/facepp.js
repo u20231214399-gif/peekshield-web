@@ -16,20 +16,30 @@ export default async function handler(req, res) {
   const FACEPP_KEY = "emeeMX6PjmIr4SVUGE-dI7N1WYc1MQsH";
   const FACEPP_SECRET = "viqVQaj-5yw6879NCxFDyEwdS5qH1Hz_";
 
+  // Usar URLSearchParams para form data
   const formData = new URLSearchParams();
   formData.append('api_key', FACEPP_KEY);
   formData.append('api_secret', FACEPP_SECRET);
+  
   for (const [key, value] of Object.entries(params || {})) {
     formData.append(key, value);
   }
 
-  const url = `https://api-us.faceplusplus.com/facepp/v3/${endpoint}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-  });
+  try {
+    const url = `https://api-us.faceplusplus.com/facepp/v3/${endpoint}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData.toString(),
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
 
-  const data = await response.json();
-  return res.status(200).json(data);
+    const data = await response.json();
+    console.log('Face++ response:', JSON.stringify(data));
+    return res.status(200).json(data);
+  } catch(e) {
+    console.error('Face++ error:', e);
+    return res.status(500).json({ error: e.message });
+  }
 }

@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://api-us.faceplusplus.com/facepp/v3/${endpoint}`;
+    const url = `https://api-cn.faceplusplus.com/facepp/v3/${endpoint}`;
     const response = await fetch(url, {
       method: 'POST',
       body: formData.toString(),

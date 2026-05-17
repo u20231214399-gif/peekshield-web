@@ -13,8 +13,8 @@ export default async function handler(req, res) {
 
   const { endpoint, params } = req.body;
 
-  const FACEPP_KEY = process.env.FACEPP_KEY;
-  const FACEPP_SECRET = process.env.FACEPP_SECRET;
+const FACEPP_KEY = "emeeMX6Pjmlr4SVUGE-dl7N1WYc1MQsH";
+const FACEPP_SECRET = "viqVQaj-5yw6879NCxFDyEwdS5qH1Hz_";
 
   const formData = new URLSearchParams();
   formData.append('api_key', FACEPP_KEY);

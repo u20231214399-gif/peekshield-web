@@ -1,4 +1,4 @@
-const FACESET = "peekshield_estudiantes";
+
 let cameraStream = null;
 let asistenciaBlockeada = false;
 let detectandoInterval = null;

@@ -13,10 +13,9 @@ export default async function handler(req, res) {
 
   const { endpoint, params } = req.body;
 
-  const FACEPP_KEY = "emeeMX6PjmIr4SVUGE-dI7N1WYc1MQsH";
+  const FACEPP_KEY = "emeeMX6Pjmlr4SVUGE-dl7N1WYc1MQsH";
   const FACEPP_SECRET = "viqVQaj-5yw6879NCxFDyEwdS5qH1Hz_";
 
-  // Usar URLSearchParams para form data
   const formData = new URLSearchParams();
   formData.append('api_key', FACEPP_KEY);
   formData.append('api_secret', FACEPP_SECRET);
